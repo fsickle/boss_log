@@ -10,9 +10,8 @@ from urllib.parse import urlencode
 
 
 class Login():
-    def __init__(self, proxy=None):
+    def __init__(self):
         self.headers = {
-            'Proxy-Authorization': self.get_proxy(),
             'User-agent': 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/68.0.3440.75 Safari/537.36',
             'referer': 'https://www.zhipin.com /',
         }
@@ -20,17 +19,9 @@ class Login():
         self.client = pymongo.MongoClient('localhost')
         self.db = self.client['jobs']
 
-    def get_proxy(self):
-        proxyUser = input('proxy id:')
-        proxyPass = input('proxy pass:')
-        end = proxyUser + ":" + proxyPass
-        a = base64.b64encode(end.encode('utf-8')).decode('utf-8')
-        proxy = "Basic " + a
-        return proxy
-
     def start_requests(self):
         url = 'https://login.zhipin.com/?ka=header-login'
-        response = self.session.get(url, headers=self.headers)
+        response = self.session.get(url, headers=self.headers, proxies=self.proxies)
         return response.text
 
     def get_key(self, content):
@@ -118,7 +109,7 @@ class Login():
             }
             headers['referer'] = index_url + '?' + urlencode(refer_query)
         session = self.session
-        response = session.get(index_url, headers=headers, params=query)
+        response = session.get(index_url, headers=headers, params=query, verify=False)
         return response.text
 
     def parse(self, content, n):
@@ -142,7 +133,7 @@ class Login():
         }
         refer_url = 'https://www.zhipin.com/c101270100/h_101270100?' + urlencode(refer_query)
         headers['referer'] = refer_url
-        response = session.get(job_url, headers=headers)
+        response = session.get(job_url, headers=headers, verify=False)
         content = pq(response.text)
         item = dict()
         item['job'] = content('#main div.job-banner div div div.info-primary div.name h1').text()
