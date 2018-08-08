@@ -18,10 +18,11 @@ class Login():
         self.session = requests.Session()
         self.client = pymongo.MongoClient('localhost')
         self.db = self.client['jobs']
+        self.db['boss_jobs'].create_index('url', unique=True)
 
     def start_requests(self):
         url = 'https://login.zhipin.com/?ka=header-login'
-        response = self.session.get(url, headers=self.headers, proxies=self.proxies)
+        response = self.session.get(url, headers=self.headers )
         return response.text
 
     def get_key(self, content):
@@ -119,7 +120,7 @@ class Login():
         for href in hrefs:
             job_url = 'https://www.zhipin.com' + href['href']
             print(job_url)
-            time.sleep(random.random()*5)
+            time.sleep(random.random()*20)
             item = self.parse_job(job_url, n)
             self.save_to_mongo(item)
 
