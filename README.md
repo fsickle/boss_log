@@ -7,3 +7,5 @@
 <img src='result/result2.png'>
 <p>将结果存储到 mongodb,如图：</P>
 <img src='result/result3.png'>
+<p>对爬取到的数据查询，可以得到在描述中带有‘爬虫’关键字的的具体数据，如图所示:</p>
+<img src="result/result4.png">
