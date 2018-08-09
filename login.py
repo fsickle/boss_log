@@ -20,10 +20,14 @@ class Login():
         self.client = pymongo.MongoClient('localhost')
         self.db = self.client['jobs']
         self.db['boss_jobs'].create_index('url', unique=True)
+        self.proxy = {
+            'http': '',
+            'https': '',
+        }
 
     def start_requests(self):
         url = 'https://login.zhipin.com/?ka=header-login'
-        response = self.session.get(url, headers=self.headers )
+        response = self.session.get(url, headers=self.headers, proxies=self.proxies)
         return response.text
 
     def get_key(self, content):
@@ -36,7 +40,7 @@ class Login():
         img_url = 'https://login.zhipin.com/captcha/?randomKey=' + key
         headers = self.headers.copy()
         headers['referer'] = 'https://login.zhipin.com/?ka=header-login'
-        response = self.session.get(img_url, headers=headers)
+        response = self.session.get(img_url, headers=headers, proxies=self.proxies)
         print('开始下载图片')
         file_path = '{0}/captcha.{1}'.format(os.getcwd(), 'png')
         print(file_path)
@@ -62,7 +66,7 @@ class Login():
         headers = self.headers.copy()
         headers['referer'] = 'https://login.zhipin.com/?ka=header-login'
         headers['x-requested-with'] = 'XMLHttpRequest'
-        response = self.session.post(url, headers=headers, data=form_data)
+        response = self.session.post(url, headers=headers, data=form_data, proxies=self.proxies)
         print(response.text)
         if response.status_code == 200:
             print('发送成功')
@@ -86,7 +90,7 @@ class Login():
         headers = self.headers.copy()
         headers['referer'] = 'https://login.zhipin.com/?ka=header-login'
         headers['x-requested-with'] = 'XMLHttpRequest'
-        response = self.session.post(url, headers=headers, data=form_data)
+        response = self.session.post(url, headers=headers, data=form_data, proxies=self.proxies)
         print(response.text)
         if response.status_code == 200:
             print('登陆成功')
@@ -111,7 +115,7 @@ class Login():
             }
             headers['referer'] = index_url + '?' + urlencode(refer_query)
         session = self.session
-        response = session.get(index_url, headers=headers, params=query, verify=False)
+        response = session.get(index_url, headers=headers, params=query, verify=False, proxies=self.proxies)
         return response.text
 
     def parse(self, content, n):
@@ -133,7 +137,7 @@ class Login():
         }
         refer_url = 'https://www.zhipin.com/c101270100/h_101270100?' + urlencode(refer_query)
         headers['referer'] = refer_url
-        response = session.get(job_url, headers=headers, verify=False, timeout=0.6)
+        response = session.get(job_url, headers=headers, verify=False, timeout=0.6, proxies=self.proxies)
         print(response.status_code)
         content = pq(response.text)
         item = dict()
