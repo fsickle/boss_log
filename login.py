@@ -7,6 +7,7 @@ import random
 import pymongo
 import base64
 from urllib.parse import urlencode
+from multiprocessing import Pool, Process
 
 
 class Login():
@@ -119,8 +120,6 @@ class Login():
 
         for href in hrefs:
             job_url = 'https://www.zhipin.com' + href['href']
-            print(job_url)
-            time.sleep(random.random()*20)
             item = self.parse_job(job_url, n)
             self.save_to_mongo(item)
 
@@ -134,7 +133,8 @@ class Login():
         }
         refer_url = 'https://www.zhipin.com/c101270100/h_101270100?' + urlencode(refer_query)
         headers['referer'] = refer_url
-        response = session.get(job_url, headers=headers, verify=False)
+        response = session.get(job_url, headers=headers, verify=False, timeout=0.6)
+        print(response.status_code)
         content = pq(response.text)
         item = dict()
         item['job'] = content('#main div.job-banner div div div.info-primary div.name h1').text()
@@ -148,21 +148,33 @@ class Login():
         return item
 
     def save_to_mongo(self, item):
-        if self.db['boss_jobs'].insert_one(item):
+        try:
+            self.db['boss_jobs'].insert_one(item)
             print('存储到MongoDB', item)
             return True
-        return False
+        except pymongo.errors.DuplicateKeyError as e:
+            print('已经存在', item)
+            print('错误为', e)
+        return True
+
+    def main(self, n, m, phone):
+        html = self.start_requests()
+        key = self.get_key(html)
+        captcha = self.download_img(key)
+        code = self.send_sms(phone, key, captcha)
+        result = self.login_in(key, captcha, code)
+        print(self.session.cookies)
+        if result:
+            for i in range(int(n), int(m)+1):
+                content = self.parse_index(i)
+                self.parse(content, i)
+        print('完成 %s到 %s的解析'% (n, m))
 
 
 if __name__ == '__main__':
     s = Login()
-    html = s.start_requests()
-    key = s.get_key(html)
-    captcha = s.download_img(key)
     phone = input('你的手机号码是：')
-    code = s.send_sms(phone, key, captcha)
-    result = s.login_in(key, captcha, code)
-    if result:
-        for i in range(1, 50):
-            content = s.parse_index(i)
-            s.parse(content, i)
+    n = input('爬取起始页:')
+    m = input('爬取终止页:')
+    s.main(n, m, phone)
+
