@@ -23,8 +23,8 @@ class Login():
         self.db['boss_jobs'].create_index('url', unique=True)
         self.proxyHost = "http-cla.abuyun.com"
         self.proxyPort = "9030"
-        self.proxyUser = 'H46HOG1142ZD47OC'
-        self.proxyPass = '0E99ECF735568D75'
+        self.proxyUser = ''
+        self.proxyPass = ''
 
         self.proxyMeta = "http://%(user)s:%(pass)s@%(host)s:%(port)s" % {
             "host": self.proxyHost,
